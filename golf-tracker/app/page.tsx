@@ -1,17 +1,60 @@
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            Golf Tracker
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Record your scores here to improve your game
-          </p>
+    <main className="min-h-screen bg-black text-white">
+      <section className="mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-between px-6 py-8 sm:px-10 lg:px-12">
+        <header className="flex items-center justify-between border-b border-white/10 pb-5 text-sm text-white/70">
+          <span className="tracking-[0.3em] uppercase">Golf Tracker</span>
+          <span>Simple score tracking</span>
+        </header>
+
+        <div className="flex flex-1 items-center py-16 sm:py-20">
+          <div className="max-w-3xl">
+            <p className="mb-5 text-sm uppercase tracking-[0.35em] text-white/55">
+              Track every round
+            </p>
+            <h1 className="max-w-2xl text-5xl font-semibold leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl">
+              A clean way to keep score on the course.
+            </h1>
+            <p className="mt-6 max-w-xl text-lg leading-8 text-white/70 sm:text-xl">
+              Log your golf scores in one place, review your rounds, and stay
+              focused on lowering your handicap.
+            </p>
+
+            <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+              <a
+                href="#start"
+                className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-medium text-black transition hover:bg-white/90"
+              >
+                Start tracking
+              </a>
+              <a
+                href="#features"
+                className="inline-flex items-center justify-center rounded-full border border-white/15 px-6 py-3 text-sm font-medium text-white transition hover:border-white/30 hover:bg-white/5"
+              >
+                See features
+              </a>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row"></div>
-      </main>
-    </div>
+
+        <section
+          id="features"
+          className="grid gap-4 border-t border-white/10 py-8 sm:grid-cols-3"
+        >
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+            <p className="text-sm text-white/55">Fast entry</p>
+            <h2 className="mt-2 text-lg font-medium">Log rounds quickly</h2>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+            <p className="text-sm text-white/55">Score history</p>
+            <h2 className="mt-2 text-lg font-medium">See how you improve</h2>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+            <p className="text-sm text-white/55">Course ready</p>
+            <h2 className="mt-2 text-lg font-medium">Built for simple use</h2>
+          </div>
+        </section>
+      </section>
+    </main>
   );
 }
