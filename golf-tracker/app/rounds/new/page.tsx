@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 
 type RoundEntry = {
   id: string;
+  date: string;
   par: number;
   score: number;
   createdAt: string;
@@ -31,8 +32,10 @@ function loadRounds(): RoundEntry[] {
 }
 
 export default function NewRoundPage() {
-  const [par, setPar] = useState("72");
+  const today = new Date().toISOString().slice(0, 10);
+  const [par, setPar] = useState("");
   const [score, setScore] = useState("");
+  const [date, setDate] = useState(today);
   const [rounds, setRounds] = useState<RoundEntry[]>(() => loadRounds());
   const [message, setMessage] = useState("");
 
@@ -59,6 +62,7 @@ export default function NewRoundPage() {
 
     const entry: RoundEntry = {
       id: crypto.randomUUID(),
+      date,
       par: parsedPar,
       score: parsedScore,
       createdAt: new Date().toISOString(),
@@ -67,6 +71,13 @@ export default function NewRoundPage() {
     setRounds((currentRounds) => [entry, ...currentRounds]);
     setScore("");
     setMessage("Score saved locally.");
+  }
+
+  function handleDeleteRound(id: string) {
+    setRounds((currentRounds) =>
+      currentRounds.filter((round) => round.id !== id),
+    );
+    setMessage("Score deleted.");
   }
 
   const scoreDifference = latestRound ? latestRound.score - latestRound.par : 0;
@@ -99,6 +110,16 @@ export default function NewRoundPage() {
               onSubmit={handleSubmit}
               className="mt-10 space-y-5 rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-8"
             >
+              <label className="block">
+                <span className="mb-2 block text-sm text-white/70">Date</span>
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(event) => setDate(event.target.value)}
+                  className="w-full rounded-2xl border border-white/10 bg-black px-4 py-3 text-base text-white outline-none transition placeholder:text-white/25 focus:border-white/30"
+                />
+              </label>
+
               <label className="block">
                 <span className="mb-2 block text-sm text-white/70">
                   Course par
@@ -175,13 +196,20 @@ export default function NewRoundPage() {
                             Score {round.score}
                           </p>
                           <p className="text-xs text-white/50">
-                            Par {round.par}
+                            {round.date} • Par {round.par}
                           </p>
                         </div>
                         <div className="text-sm text-white/70">
                           {difference >= 0 ? "+" : ""}
                           {difference}
                         </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteRound(round.id)}
+                          className="ml-4 rounded-full border border-white/10 px-3 py-1 text-xs text-white/60 transition hover:border-white/25 hover:text-white"
+                        >
+                          Delete
+                        </button>
                       </li>
                     );
                   })
