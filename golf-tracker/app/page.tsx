@@ -2,11 +2,6 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-black text-white">
       <section className="mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-between px-6 py-8 sm:px-10 lg:px-12">
-        <header className="flex items-center justify-between border-b border-white/10 pb-5 text-sm text-white/70">
-          <span className="tracking-[0.3em] uppercase">Golf Tracker</span>
-          <span>Simple score tracking</span>
-        </header>
-
         <div className="flex flex-1 items-center py-16 sm:py-20">
           <div className="max-w-3xl">
             <p className="mb-5 text-sm uppercase tracking-[0.35em] text-white/55">
