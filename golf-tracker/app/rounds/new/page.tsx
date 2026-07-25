@@ -56,9 +56,9 @@ export default function NewRoundPage() {
       return null;
     }
 
-    const scores = graphRounds.map((round) => round.score);
-    const minScore = Math.min(...scores);
-    const maxScore = Math.max(...scores);
+    const relativeScores = graphRounds.map((round) => round.score - round.par);
+    const minScore = 0;
+    const maxScore = Math.max(...relativeScores);
     const range = Math.max(maxScore - minScore, 1);
     const width = 720;
     const height = 280;
@@ -66,6 +66,7 @@ export default function NewRoundPage() {
     const paddingY = 28;
 
     const points = graphRounds.map((round, index) => {
+      const relativeScore = round.score - round.par;
       const x =
         graphRounds.length === 1
           ? width / 2
@@ -74,10 +75,12 @@ export default function NewRoundPage() {
       const y =
         height -
         paddingY -
-        ((round.score - minScore) / range) * (height - paddingY * 2);
+        ((Math.max(relativeScore, 0) - minScore) / range) *
+          (height - paddingY * 2);
 
       return {
         ...round,
+        relativeScore,
         x,
         y,
       };
@@ -305,7 +308,8 @@ export default function NewRoundPage() {
                             fontSize="11"
                             textAnchor="middle"
                           >
-                            {point.score}
+                            {point.relativeScore >= 0 ? "+" : ""}
+                            {point.relativeScore}
                           </text>
                           <text
                             x={point.x}
@@ -320,8 +324,11 @@ export default function NewRoundPage() {
                       ))}
                     </svg>
                     <div className="mt-3 flex items-center justify-between text-xs text-white/45">
-                      <span>Low: {graphMetrics.minScore}</span>
-                      <span>High: {graphMetrics.maxScore}</span>
+                      <span>Low: 0</span>
+                      <span>
+                        High: {graphMetrics.maxScore >= 0 ? "+" : ""}
+                        {graphMetrics.maxScore}
+                      </span>
                     </div>
                   </div>
                 )}
