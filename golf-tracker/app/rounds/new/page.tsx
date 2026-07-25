@@ -432,48 +432,6 @@ export default function NewRoundPage() {
                     : "Submit your first score to see it here."}
                 </p>
               </div>
-
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-                <p className="text-sm text-white/55">Saved rounds</p>
-                <ul className="mt-4 space-y-3">
-                  {rounds.length === 0 ? (
-                    <li className="text-sm text-white/50">
-                      No rounds saved yet.
-                    </li>
-                  ) : (
-                    rounds.map((round) => {
-                      const difference = round.score - round.par;
-
-                      return (
-                        <li
-                          key={round.id}
-                          className="flex items-center justify-between border-b border-white/10 pb-3 last:border-b-0 last:pb-0"
-                        >
-                          <div>
-                            <p className="text-sm font-medium">
-                              Score {round.score}
-                            </p>
-                            <p className="text-xs text-white/50">
-                              {round.date} • Par {round.par}
-                            </p>
-                          </div>
-                          <div className="text-sm text-white/70">
-                            {difference >= 0 ? "+" : ""}
-                            {difference}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteRound(round.id)}
-                            className="ml-4 rounded-full border border-white/10 px-3 py-1 text-xs text-white/60 transition hover:border-white/25 hover:text-white"
-                          >
-                            Delete
-                          </button>
-                        </li>
-                      );
-                    })
-                  )}
-                </ul>
-              </div>
             </aside>
           ) : isGraphTab ? (
             <aside className="hidden lg:block" aria-hidden="true" />
