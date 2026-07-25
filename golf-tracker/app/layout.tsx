@@ -49,10 +49,22 @@ export default function RootLayout({
                 Home
               </Link>
               <Link
-                href="/rounds/new"
+                href="/rounds/new?tab=entry"
                 className="rounded-full px-4 py-2 text-white/70 transition hover:bg-white/5 hover:text-white"
               >
-                Track Score
+                Entry
+              </Link>
+              <Link
+                href="/rounds/new?tab=scores"
+                className="rounded-full px-4 py-2 text-white/70 transition hover:bg-white/5 hover:text-white"
+              >
+                Scores
+              </Link>
+              <Link
+                href="/rounds/new?tab=graph"
+                className="rounded-full px-4 py-2 text-white/70 transition hover:bg-white/5 hover:text-white"
+              >
+                Graph
               </Link>
             </div>
           </div>

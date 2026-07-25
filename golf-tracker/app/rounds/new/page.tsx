@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 type RoundEntry = {
   id: string;
@@ -33,13 +34,19 @@ function loadRounds(): RoundEntry[] {
 }
 
 export default function NewRoundPage() {
+  const searchParams = useSearchParams();
   const today = new Date().toISOString().slice(0, 10);
-  const [activeTab, setActiveTab] = useState<ActiveTab>("entry");
   const [par, setPar] = useState("");
   const [score, setScore] = useState("");
   const [date, setDate] = useState(today);
   const [rounds, setRounds] = useState<RoundEntry[]>(() => loadRounds());
   const [message, setMessage] = useState("");
+
+  const tabParam = searchParams.get("tab");
+  const activeTab: ActiveTab =
+    tabParam === "scores" || tabParam === "graph" || tabParam === "entry"
+      ? tabParam
+      : "entry";
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -136,42 +143,6 @@ export default function NewRoundPage() {
   return (
     <main className="min-h-screen bg-black text-white">
       <section className="mx-auto flex min-h-screen w-full max-w-4xl flex-col px-6 py-8 sm:px-10 lg:px-12">
-        <div className="flex flex-wrap items-center gap-3 border-b border-white/10 py-4 text-sm">
-          <button
-            type="button"
-            onClick={() => setActiveTab("entry")}
-            className={`rounded-full px-4 py-2 transition ${
-              activeTab === "entry"
-                ? "bg-white text-black"
-                : "text-white/70 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            Entry
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("scores")}
-            className={`rounded-full px-4 py-2 transition ${
-              activeTab === "scores"
-                ? "bg-white text-black"
-                : "text-white/70 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            Scores
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("graph")}
-            className={`rounded-full px-4 py-2 transition ${
-              activeTab === "graph"
-                ? "bg-white text-black"
-                : "text-white/70 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            Graph
-          </button>
-        </div>
-
         <div className="grid flex-1 gap-8 py-10 lg:grid-cols-[1.25fr_0.75fr] lg:items-start lg:py-16">
           <section>
             <p className="text-sm uppercase tracking-[0.35em] text-white/55">
