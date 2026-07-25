@@ -15,6 +15,27 @@ type ActiveTab = "entry" | "scores" | "graph";
 
 const STORAGE_KEY = "golf-tracker-rounds";
 
+function TrashIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-4 w-4"
+    >
+      <path d="M3 6h18" />
+      <path d="M8 6V4.5A1.5 1.5 0 0 1 9.5 3h5A1.5 1.5 0 0 1 16 4.5V6" />
+      <path d="M19 6l-1 13.2A1.8 1.8 0 0 1 16.2 21H7.8A1.8 1.8 0 0 1 6 19.2L5 6" />
+      <path d="M10 10v6" />
+      <path d="M14 10v6" />
+    </svg>
+  );
+}
+
 function loadRounds(): RoundEntry[] {
   if (typeof window === "undefined") {
     return [];
@@ -139,11 +160,19 @@ export default function NewRoundPage() {
   }
 
   const scoreDifference = latestRound ? latestRound.score - latestRound.par : 0;
+  const isScoresTab = activeTab === "scores";
+  const isGraphTab = activeTab === "graph";
 
   return (
     <main className="min-h-screen bg-black text-white">
-      <section className="mx-auto flex min-h-screen w-full max-w-4xl flex-col px-6 py-8 sm:px-10 lg:px-12">
-        <div className="grid flex-1 gap-8 py-10 lg:grid-cols-[1.25fr_0.75fr] lg:items-start lg:py-16">
+      <section className="mx-auto flex min-h-screen w-full max-w-[67rem] flex-col px-6 py-8 sm:px-10 lg:px-12">
+        <div
+          className={`grid flex-1 gap-8 py-10 lg:items-start lg:py-16 ${
+            isScoresTab || isGraphTab
+              ? "lg:grid-cols-1"
+              : "lg:grid-cols-[1.25fr_0.75fr]"
+          }`}
+        >
           <section>
             <p className="text-sm uppercase tracking-[0.35em] text-white/55">
               {activeTab === "graph"
@@ -222,6 +251,77 @@ export default function NewRoundPage() {
                   <p className="text-sm text-white/60">{message}</p>
                 </div>
               </form>
+            ) : activeTab === "scores" ? (
+              <div className="mt-10 space-y-6">
+                {latestRound ? (
+                  <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+                    <p className="text-sm text-white/55">Latest saved round</p>
+                    <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
+                      <div>
+                        <div className="text-3xl font-semibold">
+                          {latestRound.score}
+                        </div>
+                        <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-white/70">
+                          <span>{latestRound.date}</span>
+                          <span className="text-white/35">•</span>
+                          <span>Par {latestRound.par}</span>
+                        </div>
+                      </div>
+                      <div className="text-sm text-white/70">
+                        {scoreDifference >= 0 ? "+" : ""}
+                        {scoreDifference} relative to par
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5">
+                  <div className="grid grid-cols-[1.1fr_0.7fr_0.7fr_0.7fr_0.35fr] gap-3 border-b border-white/10 px-6 py-4 text-xs uppercase tracking-[0.28em] text-white/45">
+                    <div>Date</div>
+                    <div>Par</div>
+                    <div>Score</div>
+                    <div>To Par</div>
+                    <div className="text-right"> </div>
+                  </div>
+
+                  <div className="divide-y divide-white/10">
+                    {rounds.length === 0 ? (
+                      <div className="px-6 py-8 text-sm text-white/50">
+                        No rounds saved yet.
+                      </div>
+                    ) : (
+                      rounds.map((round) => {
+                        const difference = round.score - round.par;
+
+                        return (
+                          <div
+                            key={round.id}
+                            className="grid grid-cols-[1.1fr_0.7fr_0.7fr_0.7fr_0.35fr] items-center gap-3 px-6 py-4 text-sm"
+                          >
+                            <div className="text-white/85">{round.date}</div>
+                            <div className="text-white/70">{round.par}</div>
+                            <div className="font-medium text-white">
+                              {round.score}
+                            </div>
+                            <div className="text-white/70">
+                              {difference >= 0 ? "+" : ""}
+                              {difference}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteRound(round.id)}
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-white/55 transition hover:bg-white/5 hover:text-white"
+                              aria-label={`Delete round on ${round.date}`}
+                            >
+                              <TrashIcon />
+                            </button>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              </div>
             ) : activeTab === "graph" ? (
               <div className="mt-10 rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-8">
                 {graphMetrics === null ? (
@@ -307,20 +407,32 @@ export default function NewRoundPage() {
             ) : null}
           </section>
 
-          <aside className="space-y-4 lg:pt-12">
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-              <p className="text-sm text-white/55">Latest saved round</p>
-              <div className="mt-3 text-3xl font-semibold">
-                {latestRound ? `${latestRound.score}` : "--"}
+          {activeTab === "entry" ? (
+            <aside className="space-y-4 lg:pt-12">
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+                <p className="text-sm text-white/55">Latest saved round</p>
+                <div className="mt-3 text-3xl font-semibold">
+                  {latestRound ? `${latestRound.score}` : "--"}
+                </div>
+                {latestRound ? (
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-white/70">
+                    <span>{latestRound.date}</span>
+                    <span className="text-white/35">•</span>
+                    <span>Par {latestRound.par}</span>
+                  </div>
+                ) : null}
+                <p className="mt-2 text-sm text-white/70">
+                  {latestRound
+                    ? `
+                        ${scoreDifference >= 0 ? "+" : ""}${scoreDifference}
+                        relative to par
+                      `
+                        .replace(/\s+/g, " ")
+                        .trim()
+                    : "Submit your first score to see it here."}
+                </p>
               </div>
-              <p className="mt-2 text-sm text-white/70">
-                {latestRound
-                  ? `Par ${latestRound.par} • ${scoreDifference >= 0 ? "+" : ""}${scoreDifference} relative to par`
-                  : "Submit your first score to see it here."}
-              </p>
-            </div>
 
-            {activeTab !== "graph" ? (
               <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
                 <p className="text-sm text-white/55">Saved rounds</p>
                 <ul className="mt-4 space-y-3">
@@ -362,8 +474,10 @@ export default function NewRoundPage() {
                   )}
                 </ul>
               </div>
-            ) : null}
-          </aside>
+            </aside>
+          ) : isGraphTab ? (
+            <aside className="hidden lg:block" aria-hidden="true" />
+          ) : null}
         </div>
       </section>
     </main>

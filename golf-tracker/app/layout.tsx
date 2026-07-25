@@ -33,7 +33,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-black text-white">
         <nav className="border-b border-white/10 bg-black/95">
-          <div className="mx-auto relative flex w-full max-w-6xl items-center px-6 py-4 text-sm sm:px-10 lg:px-12">
+          <div className="mx-auto relative flex w-full max-w-[86rem] items-center px-6 py-4 text-sm sm:px-10 lg:px-12">
             <Link
               href="/"
               className="text-sm font-medium tracking-[0.25em] uppercase"
