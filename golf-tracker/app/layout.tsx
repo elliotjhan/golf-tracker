@@ -33,15 +33,15 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-black text-white">
         <nav className="border-b border-white/10 bg-black/95">
-          <div className="mx-auto relative flex w-full max-w-[86rem] items-center px-6 py-4 text-sm sm:px-10 lg:px-12">
+          <div className="mx-auto relative flex w-full max-w-[86rem] flex-col items-start gap-3 px-6 py-4 text-sm sm:flex-row sm:items-center sm:gap-0 sm:px-10 lg:px-12">
             <Link
               href="/"
-              className="text-sm font-medium tracking-[0.25em] uppercase"
+              className="w-full sm:w-auto text-sm font-medium tracking-[0.25em] uppercase"
             >
               Golf Tracker
             </Link>
 
-            <div className="absolute left-1/2 flex -translate-x-1/2 items-center gap-2">
+            <div className="flex w-full flex-wrap items-center justify-center gap-2 sm:absolute sm:left-1/2 sm:w-auto sm:-translate-x-1/2">
               <Link
                 href="/"
                 className="rounded-full px-4 py-2 text-white/70 transition hover:bg-white/5 hover:text-white"
