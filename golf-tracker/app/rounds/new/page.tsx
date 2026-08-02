@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type RoundEntry = {
   id: string;
@@ -12,6 +12,12 @@ type RoundEntry = {
 };
 
 type ActiveTab = "entry" | "scores" | "graph";
+
+type RoundFormValues = {
+  date: string;
+  par: string;
+  score: string;
+};
 
 const STORAGE_KEY = "golf-tracker-rounds";
 
@@ -36,6 +42,123 @@ function TrashIcon() {
   );
 }
 
+function PencilIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-4 w-4"
+    >
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+  );
+}
+
+type RoundFormProps = {
+  editingRound?: RoundEntry;
+  message: string;
+  onSubmit: (values: RoundFormValues) => void;
+  onCancelEdit: () => void;
+};
+
+function RoundForm({
+  editingRound,
+  message,
+  onSubmit,
+  onCancelEdit,
+}: RoundFormProps) {
+  const today = new Date().toISOString().slice(0, 10);
+  const [date, setDate] = useState(editingRound?.date ?? today);
+  const [par, setPar] = useState(editingRound ? String(editingRound.par) : "");
+  const [score, setScore] = useState(
+    editingRound ? String(editingRound.score) : "",
+  );
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    onSubmit({
+      date,
+      par,
+      score,
+    });
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="mt-10 space-y-5 rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-8"
+    >
+      {editingRound ? (
+        <div className="rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white/70">
+          Editing round from {editingRound.date}
+        </div>
+      ) : null}
+
+      <label className="block">
+        <span className="mb-2 block text-sm text-white/70">Date</span>
+        <input
+          type="date"
+          value={date}
+          onChange={(event) => setDate(event.target.value)}
+          className="w-full rounded-2xl border border-white/10 bg-black px-4 py-3 text-base text-white outline-none transition placeholder:text-white/25 focus:border-white/30"
+        />
+      </label>
+
+      <label className="block">
+        <span className="mb-2 block text-sm text-white/70">Course par</span>
+        <input
+          type="number"
+          min="1"
+          step="1"
+          value={par}
+          onChange={(event) => setPar(event.target.value)}
+          className="w-full rounded-2xl border border-white/10 bg-black px-4 py-3 text-base text-white outline-none transition placeholder:text-white/25 focus:border-white/30"
+          placeholder="72"
+        />
+      </label>
+
+      <label className="block">
+        <span className="mb-2 block text-sm text-white/70">Your score</span>
+        <input
+          type="number"
+          min="1"
+          step="1"
+          value={score}
+          onChange={(event) => setScore(event.target.value)}
+          className="w-full rounded-2xl border border-white/10 bg-black px-4 py-3 text-base text-white outline-none transition placeholder:text-white/25 focus:border-white/30"
+          placeholder="84"
+        />
+      </label>
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <button
+          type="submit"
+          className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-medium text-black transition hover:bg-white/90"
+        >
+          {editingRound ? "Update score" : "Save score"}
+        </button>
+        {editingRound ? (
+          <button
+            type="button"
+            onClick={onCancelEdit}
+            className="inline-flex items-center justify-center rounded-full border border-white/10 px-6 py-3 text-sm font-medium text-white/70 transition hover:border-white/25 hover:text-white"
+          >
+            Cancel edit
+          </button>
+        ) : null}
+        <p className="text-sm text-white/60">{message}</p>
+      </div>
+    </form>
+  );
+}
+
 function loadRounds(): RoundEntry[] {
   if (typeof window === "undefined") {
     return [];
@@ -55,19 +178,25 @@ function loadRounds(): RoundEntry[] {
 }
 
 export default function NewRoundPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const today = new Date().toISOString().slice(0, 10);
-  const [par, setPar] = useState("");
-  const [score, setScore] = useState("");
-  const [date, setDate] = useState(today);
   const [rounds, setRounds] = useState<RoundEntry[]>(() => loadRounds());
   const [message, setMessage] = useState("");
+  const [formResetSeed, setFormResetSeed] = useState(0);
+  const [pendingDeleteRoundId, setPendingDeleteRoundId] = useState<
+    string | null
+  >(null);
 
   const tabParam = searchParams.get("tab");
+  const editParam = searchParams.get("edit");
   const activeTab: ActiveTab =
     tabParam === "scores" || tabParam === "graph" || tabParam === "entry"
       ? tabParam
       : "entry";
+  const editingRound = useMemo(
+    () => rounds.find((round) => round.id === editParam),
+    [editParam, rounds],
+  );
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -128,34 +257,63 @@ export default function NewRoundPage() {
     };
   }, [graphRounds]);
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const parsedPar = Number(par);
-    const parsedScore = Number(score);
+  function handleSubmit(values: RoundFormValues) {
+    const parsedPar = Number(values.par);
+    const parsedScore = Number(values.score);
 
     if (!Number.isFinite(parsedPar) || !Number.isFinite(parsedScore)) {
       setMessage("Enter valid numbers for par and score.");
       return;
     }
 
+    if (editingRound) {
+      setRounds((currentRounds) =>
+        currentRounds.map((round) =>
+          round.id === editingRound.id
+            ? {
+                ...round,
+                date: values.date,
+                par: parsedPar,
+                score: parsedScore,
+              }
+            : round,
+        ),
+      );
+      router.replace("/rounds/new?tab=scores");
+      setMessage("Score updated locally.");
+      setFormResetSeed((currentSeed) => currentSeed + 1);
+      return;
+    }
+
     const entry: RoundEntry = {
       id: crypto.randomUUID(),
-      date,
+      date: values.date,
       par: parsedPar,
       score: parsedScore,
       createdAt: new Date().toISOString(),
     };
 
     setRounds((currentRounds) => [entry, ...currentRounds]);
-    setScore("");
     setMessage("Score saved locally.");
+    setFormResetSeed((currentSeed) => currentSeed + 1);
+  }
+
+  function handleEditRound(id: string) {
+    setPendingDeleteRoundId(null);
+    router.push(`/rounds/new?tab=entry&edit=${id}`);
+  }
+
+  function handleCancelEdit() {
+    router.replace("/rounds/new?tab=scores");
+    setMessage("");
+    setFormResetSeed((currentSeed) => currentSeed + 1);
   }
 
   function handleDeleteRound(id: string) {
     setRounds((currentRounds) =>
       currentRounds.filter((round) => round.id !== id),
     );
+    setPendingDeleteRoundId(null);
     setMessage("Score deleted.");
   }
 
@@ -197,60 +355,13 @@ export default function NewRoundPage() {
             </p>
 
             {activeTab === "entry" ? (
-              <form
+              <RoundForm
+                key={`${editParam ?? "new"}-${formResetSeed}`}
+                editingRound={editingRound}
+                message={message}
                 onSubmit={handleSubmit}
-                className="mt-10 space-y-5 rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-8"
-              >
-                <label className="block">
-                  <span className="mb-2 block text-sm text-white/70">Date</span>
-                  <input
-                    type="date"
-                    value={date}
-                    onChange={(event) => setDate(event.target.value)}
-                    className="w-full rounded-2xl border border-white/10 bg-black px-4 py-3 text-base text-white outline-none transition placeholder:text-white/25 focus:border-white/30"
-                  />
-                </label>
-
-                <label className="block">
-                  <span className="mb-2 block text-sm text-white/70">
-                    Course par
-                  </span>
-                  <input
-                    type="number"
-                    min="1"
-                    step="1"
-                    value={par}
-                    onChange={(event) => setPar(event.target.value)}
-                    className="w-full rounded-2xl border border-white/10 bg-black px-4 py-3 text-base text-white outline-none transition placeholder:text-white/25 focus:border-white/30"
-                    placeholder="72"
-                  />
-                </label>
-
-                <label className="block">
-                  <span className="mb-2 block text-sm text-white/70">
-                    Your score
-                  </span>
-                  <input
-                    type="number"
-                    min="1"
-                    step="1"
-                    value={score}
-                    onChange={(event) => setScore(event.target.value)}
-                    className="w-full rounded-2xl border border-white/10 bg-black px-4 py-3 text-base text-white outline-none transition placeholder:text-white/25 focus:border-white/30"
-                    placeholder="84"
-                  />
-                </label>
-
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <button
-                    type="submit"
-                    className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-medium text-black transition hover:bg-white/90"
-                  >
-                    Save score
-                  </button>
-                  <p className="text-sm text-white/60">{message}</p>
-                </div>
-              </form>
+                onCancelEdit={handleCancelEdit}
+              />
             ) : activeTab === "scores" ? (
               <div className="mt-10 space-y-6">
                 {latestRound ? (
@@ -276,12 +387,12 @@ export default function NewRoundPage() {
                 ) : null}
 
                 <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5">
-                  <div className="grid grid-cols-[1.1fr_0.7fr_0.7fr_0.7fr_0.35fr] gap-3 border-b border-white/10 px-6 py-4 text-xs uppercase tracking-[0.28em] text-white/45">
+                  <div className="grid grid-cols-[1.1fr_0.7fr_0.7fr_0.7fr_0.75fr] gap-3 border-b border-white/10 px-6 py-4 text-xs uppercase tracking-[0.28em] text-white/45">
                     <div>Date</div>
                     <div>Par</div>
                     <div>Score</div>
                     <div>To Par</div>
-                    <div className="text-right"> </div>
+                    <div className="text-right">Actions</div>
                   </div>
 
                   <div className="divide-y divide-white/10">
@@ -296,7 +407,7 @@ export default function NewRoundPage() {
                         return (
                           <div
                             key={round.id}
-                            className="grid grid-cols-[1.1fr_0.7fr_0.7fr_0.7fr_0.35fr] items-center gap-3 px-6 py-4 text-sm"
+                            className="grid grid-cols-[1.1fr_0.7fr_0.7fr_0.7fr_0.75fr] items-center gap-3 px-6 py-4 text-sm"
                           >
                             <div className="text-white/85">{round.date}</div>
                             <div className="text-white/70">{round.par}</div>
@@ -307,14 +418,56 @@ export default function NewRoundPage() {
                               {difference >= 0 ? "+" : ""}
                               {difference}
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteRound(round.id)}
-                              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-white/55 transition hover:bg-white/5 hover:text-white"
-                              aria-label={`Delete round on ${round.date}`}
-                            >
-                              <TrashIcon />
-                            </button>
+                            <div className="relative flex items-center justify-end gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleEditRound(round.id)}
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-full text-white/55 transition hover:bg-white/5 hover:text-white"
+                                aria-label={`Edit round on ${round.date}`}
+                              >
+                                <PencilIcon />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setPendingDeleteRoundId((currentId) =>
+                                    currentId === round.id ? null : round.id,
+                                  )
+                                }
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-full text-white/55 transition hover:bg-white/5 hover:text-white"
+                                aria-label={`Delete round on ${round.date}`}
+                              >
+                                <TrashIcon />
+                              </button>
+
+                              {pendingDeleteRoundId === round.id ? (
+                                <div className="absolute right-0 top-full z-20 mt-2 w-40 rounded-2xl border border-white/10 bg-black px-3 py-3 text-left shadow-2xl shadow-black/50">
+                                  <p className="text-xs text-white/70">
+                                    Are you sure?
+                                  </p>
+                                  <div className="mt-3 flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleDeleteRound(round.id)
+                                      }
+                                      className="rounded-full bg-white px-3 py-1.5 text-xs font-medium text-black transition hover:bg-white/90"
+                                    >
+                                      Yes
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setPendingDeleteRoundId(null)
+                                      }
+                                      className="rounded-full border border-white/10 px-3 py-1.5 text-xs text-white/70 transition hover:border-white/25 hover:text-white"
+                                    >
+                                      No
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : null}
+                            </div>
                           </div>
                         );
                       })
